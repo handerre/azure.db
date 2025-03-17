@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8"> <!-- Angir tegnsettet til UTF-8 for å støtte spesialtegn -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Gjør siden responsiv på mobile enheter -->
+    <title>Brukere</title> <!-- Setter sidetittelen -->
+    <link rel="stylesheet" href="styles.css"> <!-- Kobler til en ekstern CSS-fil for styling -->
+    <script>
+        // Funksjon for å slette en bruker via DELETE-forespørsel
+        async function deleteUser(userId) {
+            if (confirm("Er du sikker på at du vil slette denne brukeren?")) { // Viser en bekreftelsesdialog
+                const response = await fetch(`/delete/${userId}`, { // Sender en DELETE-forespørsel til serveren
+                    method: "DELETE"
+                });
+
+                if (response.ok) { // Sjekker om serveren svarte med en suksessstatus
+                    alert("Bruker slettet!"); // Viser en bekreftelse til brukeren
+                    location.reload(); // Oppdaterer siden for å fjerne brukeren fra listen
+                } else {
+                    alert("Kunne ikke slette brukeren."); // Feilmelding hvis sletting mislyktes
+                }
+            }
+        }
+
+        // Funksjon for å legge til en ny bruker via POST-forespørsel
+        async function addUser(event) {
+            event.preventDefault(); // Hindrer standard skjemainnsending (som ville lastet inn siden på nytt)
+
+            const nameInput = document.getElementById("name"); // Henter inputfeltet for navn
+            const emailInput = document.getElementById("email"); // Henter inputfeltet for e-post
+
+            const name = nameInput.value.trim(); // Henter verdien fra inputfeltet og fjerner mellomrom
+            const email = emailInput.value.trim(); // Henter verdien fra inputfeltet og fjerner mellomrom
+
+            if (!name || !email) { // Sjekker om feltene er tomme
+                alert("Vennligst fyll inn både navn og e-post."); // Viser en feilmelding til brukeren
+                return; // Stopper funksjonen hvis feltene ikke er fylt ut
+            }
+
+            // Sender en POST-forespørsel til serveren for å legge til en ny bruker
+            const response = await fetch('/add', {
+                method: "POST", // Bruker HTTP POST-metoden
+                headers: {
+                    "Content-Type": "application/json" // Angir at dataen sendes som JSON
+                },
+                body: JSON.stringify({ name, email }) // Konverterer dataen til JSON-format
+            });
+
+            if (response.ok) { // Sjekker om serveren svarte med en suksessstatus
+                alert("Bruker lagt til!"); // Viser en bekreftelse til brukeren
+
+                // Tømmer inputfeltene etter vellykket innsending
+                nameInput.value = "";
+                emailInput.value = "";
+
+                location.reload(); // Oppdaterer siden for å vise den nye brukeren i listen
+            } else {
+                alert("Kunne ikke legge til brukeren."); // Feilmelding hvis noe gikk galt
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Legg til ny bruker</h1> <!-- Overskrift for skjemaet -->
+
+    <!-- Skjema for å legge til en ny bruker -->
+    <form onsubmit="addUser(event)"> <!-- Kaller addUser() når skjemaet sendes -->
+        <input type="text" id="name" placeholder="Navn" required> <!-- Inputfelt for navn (påkrevd) -->
+        <input type="email" id="email" placeholder="E-post" required> <!-- Inputfelt for e-post (påkrevd) -->
+        <button type="submit">Legg til</button> <!-- Knapp for å sende skjemaet -->
+    </form>
+
+    <h1>Liste over brukere</h1> <!-- Overskrift for brukerlisten -->
+
+    <!-- Liste over brukere, generert dynamisk fra serveren -->
+    <ul>
+        <% users.forEach(user => { %> <!-- EJS-løkke som itererer gjennom brukerne -->
+            <li>
+                <%= user.name %> - <%= user.email %> <!-- Viser brukernavn og e-post -->
+                <button onclick="deleteUser('<%= user.id %>')">Slett</button> <!-- Knapp for å slette brukeren -->
+            </li>
+        <% }) %> <!-- Avslutter løkken -->
+    </ul>
+</body>
+</html>
